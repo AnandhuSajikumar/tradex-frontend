@@ -38,7 +38,7 @@ export default function LoginPage() {
         setErrorMsg(null);
         try {
             // Assuming your Identity Service exposes /auth/token for login
-            const response = await api.post("/auth/token", {
+            const response = await api.post("/api/v1/auth/token", {
                 username: values.username,
                 password: values.password,
             });

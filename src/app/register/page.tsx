@@ -39,7 +39,7 @@ export default function RegisterPage() {
         try {
             // Based on Identity Service, /auth/register creates user
             // Note: We're mapping 'name' to 'username' here assuming IdentityService uses 'username'
-            const response = await api.post("/auth/register", {
+            const response = await api.post("/api/v1/auth/register", {
                 name: values.name,
                 email: values.email,
                 password: values.password,

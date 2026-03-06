@@ -7,6 +7,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 
+import { useAuthStore } from "@/store/authStore";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +24,7 @@ const formSchema = z.object({
 
 export default function RegisterPage() {
     const router = useRouter();
+    const { login } = useAuthStore();
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -47,8 +50,13 @@ export default function RegisterPage() {
                 password: values.password,
             });
 
-            // On success, redirect to login
-            router.push("/login?registered=true");
+            const token = response.data?.token || response.data;
+            if (token && typeof token === 'string') {
+                login(token);
+                router.push("/dashboard");
+            } else {
+                router.push("/login?registered=true");
+            }
         } catch (error: any) {
             console.error("Registration Error:", error);
             setErrorMsg(error.response?.data || "Failed to register. Please try again.");

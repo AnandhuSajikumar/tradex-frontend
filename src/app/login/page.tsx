@@ -37,14 +37,14 @@ export default function LoginPage() {
         setLoading(true);
         setErrorMsg(null);
         try {
-            // Assuming your Identity Service exposes /auth/token for login
-            const response = await api.post("/api/v1/auth/token", {
+            const response = await api.post("/api/v1/auth/login", {
                 email: values.email,
                 password: values.password,
             });
 
             // Save token to store and localstorage
-            setAuth(response.data);
+            const token = response.data?.token || response.data;
+            setAuth(token);
 
             // Redirect to dashboard (or portfolio view)
             router.push("/dashboard");

@@ -15,7 +15,7 @@ import { useAuthStore } from "@/store/authStore";
 import { api } from "@/lib/api";
 
 const formSchema = z.object({
-    username: z.string().min(3, "Username must be at least 3 characters."),
+    email: z.string().email("Please enter a valid email address."),
     password: z.string().min(6, "Password must be at least 6 characters."),
 });
 
@@ -28,7 +28,7 @@ export default function LoginPage() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            username: "",
+            email: "",
             password: "",
         },
     });
@@ -39,7 +39,7 @@ export default function LoginPage() {
         try {
             // Assuming your Identity Service exposes /auth/token for login
             const response = await api.post("/api/v1/auth/token", {
-                username: values.username,
+                email: values.email,
                 password: values.password,
             });
 
@@ -70,12 +70,12 @@ export default function LoginPage() {
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                             <FormField
                                 control={form.control}
-                                name="username"
+                                name="email"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Username</FormLabel>
+                                        <FormLabel>Email</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="developer123" {...field} />
+                                            <Input type="email" placeholder="m@example.com" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

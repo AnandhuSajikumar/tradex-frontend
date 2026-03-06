@@ -14,7 +14,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { api } from "@/lib/api";
 
 const formSchema = z.object({
-    name: z.string().min(2, "Name must be at least 2 characters."),
+    firstname: z.string().min(2, "First name must be at least 2 characters."),
+    lastname: z.string().min(2, "Last name must be at least 2 characters."),
     email: z.string().email("Please enter a valid email address."),
     password: z.string().min(6, "Password must be at least 6 characters."),
 });
@@ -27,7 +28,8 @@ export default function RegisterPage() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            name: "",
+            firstname: "",
+            lastname: "",
             email: "",
             password: "",
         },
@@ -38,9 +40,9 @@ export default function RegisterPage() {
         setErrorMsg(null);
         try {
             // Based on Identity Service, /auth/register creates user
-            // Note: We're mapping 'name' to 'username' here assuming IdentityService uses 'username'
             const response = await api.post("/api/v1/auth/register", {
-                name: values.name,
+                firstname: values.firstname,
+                lastname: values.lastname,
                 email: values.email,
                 password: values.password,
             });
@@ -69,12 +71,25 @@ export default function RegisterPage() {
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                             <FormField
                                 control={form.control}
-                                name="name"
+                                name="firstname"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Username</FormLabel>
+                                        <FormLabel>First Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="developer123" {...field} />
+                                            <Input placeholder="John" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="lastname"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Last Name</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Doe" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

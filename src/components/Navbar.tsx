@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { useAuthStore } from "@/store/authStore";
 
 export function Navbar() {
-  const { isAuthenticated, logout } = useAuthStore();
+  const { isAuthenticated, logout, user } = useAuthStore();
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between">
@@ -23,6 +23,11 @@ export function Navbar() {
               <Link href="/portfolio">
                 <Button variant="ghost" size="sm">Portfolio</Button>
               </Link>
+              {user?.role === "ADMIN" && (
+                <Link href="/admin">
+                  <Button variant="ghost" size="sm" className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">Admin Portal</Button>
+                </Link>
+              )}
               <Button variant="outline" size="sm" onClick={logout}>
                 Log out
               </Button>

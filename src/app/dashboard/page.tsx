@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { api } from "@/lib/api";
 import { Megaphone, Receipt, BarChart3, Globe } from "lucide-react";
+import TradeModal from "./TradeModal";
 
 // Mock helper to generate realistic looking percentage changes based on symbol name
 const getMockChange = (symbol: string, price: number) => {
@@ -28,6 +29,17 @@ export default function DashboardPage() {
     const [portfolioData, setPortfolioData] = useState<any>(null);
     const [marketData, setMarketData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Trade Modal State
+    const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
+    const [selectedTradeStock, setSelectedTradeStock] = useState<any>(null);
+    const [initialTradeAction, setInitialTradeAction] = useState<"Buy" | "Sell">("Buy");
+
+    const openTradeModal = (stock: any, action: "Buy" | "Sell") => {
+        setSelectedTradeStock(stock);
+        setInitialTradeAction(action);
+        setIsTradeModalOpen(true);
+    };
 
     useEffect(() => {
         if (!isAuthenticated) {
@@ -95,6 +107,9 @@ export default function DashboardPage() {
         };
 
         fetchDashboardData();
+
+        // Used by TradeModal to refresh after success
+        (window as any).refreshDashboard = fetchDashboardData;
 
         const intervalId = setInterval(async () => {
             try {
@@ -164,6 +179,12 @@ export default function DashboardPage() {
                                             <div className={`text-[13px] font-medium ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
                                                 {isPositive ? '+' : '-'}{changeAmount} ({changePercent}%)
                                             </div>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); openTradeModal(stock, "Buy"); }}
+                                                className="mt-4 w-full py-1.5 border border-emerald-500 text-emerald-600 rounded text-xs font-medium hover:bg-emerald-50 transition-colors"
+                                            >
+                                                Buy
+                                            </button>
                                         </div>
                                     </div>
                                 );
@@ -207,7 +228,10 @@ export default function DashboardPage() {
                                                 </div>
                                             </div>
                                             <div className="text-right w-24">
-                                                <button className="px-6 py-2 border border-emerald-500 text-emerald-600 rounded font-medium text-[13px] hover:bg-emerald-50 transition-colors w-full">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); openTradeModal(stock, "Buy"); }}
+                                                    className="px-6 py-2 border border-emerald-500 text-emerald-600 rounded font-medium text-[13px] hover:bg-emerald-50 transition-colors w-full"
+                                                >
                                                     Buy
                                                 </button>
                                             </div>
@@ -282,6 +306,14 @@ export default function DashboardPage() {
                     </section>
                 </div>
             </div>
+
+            <TradeModal
+                isOpen={isTradeModalOpen}
+                onClose={() => setIsTradeModalOpen(false)}
+                stock={selectedTradeStock}
+                initialAction={initialTradeAction}
+                onSuccess={() => { (window as any).refreshDashboard?.(); }}
+            />
         </div>
     );
 }

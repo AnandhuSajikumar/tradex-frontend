@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 import { api } from "@/lib/api";
 import { Megaphone, Receipt, BarChart3, Globe } from "lucide-react";
 import TradeModal from "./TradeModal";
+import TransactionHistory from "./TransactionHistory";
 
 // Mock helper to generate realistic looking percentage changes based on symbol name
 const getMockChange = (symbol: string, price: number) => {
@@ -304,6 +305,8 @@ export default function DashboardPage() {
                             ))}
                         </div>
                     </section>
+
+                    <TransactionHistory marketData={marketData} />
                 </div>
             </div>
 

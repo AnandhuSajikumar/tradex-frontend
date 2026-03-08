@@ -20,6 +20,9 @@ export function Navbar() {
               <Link href="/dashboard">
                 <Button variant="ghost" size="sm">Dashboard</Button>
               </Link>
+              <Link href="/portfolio">
+                <Button variant="ghost" size="sm">Portfolio</Button>
+              </Link>
               <Button variant="outline" size="sm" onClick={logout}>
                 Log out
               </Button>

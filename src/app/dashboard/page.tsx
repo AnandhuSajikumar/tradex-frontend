@@ -37,24 +37,56 @@ export default function DashboardPage() {
 
         const fetchDashboardData = async () => {
             try {
-                const marketResponse = await api.get('/v1/api/market/all');
-                const sortedData = [...marketResponse.data].sort((a, b) => a.symbol.localeCompare(b.symbol));
-                setMarketData(sortedData);
+                const [marketRes, userRes, portfolioRes] = await Promise.all([
+                    api.get('/v1/api/market/all'),
+                    api.get('/api/v1/user/me'),
+                    api.get('/portfolio/holdings')
+                ]);
 
-                setTimeout(() => {
-                    setPortfolioData({
-                        currentValue: 8800.00,
-                        investedAmount: 9007.00,
-                        onedayReturnAmt: -121.00,
-                        onedayReturnPct: -1.36,
-                        totalReturnAmt: -206.80,
-                        totalReturnPct: -2.30,
-                    });
-                    setLoading(false);
-                }, 500);
-            } catch (error) {
+                const sortedMarketData = [...marketRes.data].sort((a: any, b: any) => a.symbol.localeCompare(b.symbol));
+                setMarketData(sortedMarketData);
+
+                const marketMap = new Map(sortedMarketData.map((s: any) => [s.id, s]));
+
+                const holdings = portfolioRes.data;
+                let currentValue = 0;
+                let investedAmount = 0;
+                let onedayReturnAmt = 0;
+
+                holdings.forEach((h: any) => {
+                    const price = marketMap.get(h.stockId)?.price || h.avgBuyPrice;
+                    const stockCurrentValue = price * h.quantity;
+                    const stockInvestedAmount = h.avgBuyPrice * h.quantity;
+
+                    // Since we don't have yesterdays mock price, we'll approximate 1D return as slightly random based on symbol for now
+                    const mockChange = getMockChange(marketMap.get(h.stockId)?.symbol || "UNKNOWN", price);
+                    const dailyAmtChange = parseFloat(mockChange.changeAmount) * h.quantity * (mockChange.isPositive ? 1 : -1);
+
+                    currentValue += stockCurrentValue;
+                    investedAmount += stockInvestedAmount;
+                    onedayReturnAmt += dailyAmtChange;
+                });
+
+                // Add unused wallet balance to total value (or display separately if preferred)
+                // We'll keep currentValue as only invested stocks, but maybe user balance helps?
+                const totalReturnAmt = currentValue - investedAmount;
+                const totalReturnPct = investedAmount > 0 ? (totalReturnAmt / investedAmount) * 100 : 0;
+                const onedayReturnPct = currentValue > 0 ? (onedayReturnAmt / (currentValue - onedayReturnAmt)) * 100 : 0;
+
+                setPortfolioData({
+                    currentValue,
+                    investedAmount,
+                    totalReturnAmt,
+                    totalReturnPct,
+                    onedayReturnAmt,
+                    onedayReturnPct,
+                    walletBalance: userRes.data.walletBalance
+                });
+
+                setLoading(false);
+            } catch (error: any) {
                 console.error("Failed to fetch dashboard data:", error);
-                if ((error as any).response?.status === 401) {
+                if (error.response?.status === 401 || error.response?.status === 403) {
                     logout();
                     router.push("/login");
                 }
@@ -193,9 +225,13 @@ export default function DashboardPage() {
                     <section>
                         <h2 className="text-xl font-medium mb-5 text-gray-800 tracking-tight">Your investments</h2>
                         <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                            <div className="mb-8">
-                                <div className="text-[15px] text-gray-500 mb-2 font-medium">Current</div>
+                            <div className="mb-4">
+                                <div className="text-[15px] text-gray-500 mb-2 font-medium">Invested Value</div>
                                 <div className="text-3xl font-medium text-gray-900 tracking-tight">{formatCurrency(portfolioData?.currentValue || 0)}</div>
+                            </div>
+                            <div className="mb-8">
+                                <div className="text-[13px] text-gray-500 mb-1 font-medium">Available Wallet Balance</div>
+                                <div className="text-xl font-medium text-emerald-600 tracking-tight">{formatCurrency(portfolioData?.walletBalance || 0)}</div>
                             </div>
 
                             <div className="space-y-4 pt-4 border-t border-gray-100 text-[14px]">

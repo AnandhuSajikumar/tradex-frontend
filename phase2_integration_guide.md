@@ -63,3 +63,32 @@ Phase 2 focused on replacing mock data in the frontend dashboard with real data 
 
 ## Summary
 The dashboard is now a fully integrated interface that securely uses JWT authentication to talk to the API Gateway, which fans out requests to the Identity, Portfolio, Market, and Transact microservices. By combining real-time market data with the user's secure portfolio state, the frontend accurately calculates dynamic returns and seamlessly processes new idempotent orders.
+
+## Phase 3: Wallet Management & Funding
+**Goal:** Allow users to instantly top up their wallet balance to execute trades.
+
+*   **`User.java` (Identity Service):** Implemented `creditWallet(BigDecimal amount)` to add funds to the user entity.
+*   **`FundsRequest.java` (Identity Service):** Created a DTO to structure the deposit `{ amount }` payload securely.
+*   **`UserService.java` & `UserController.java` (Identity Service):** Built `@Transactional` `addFunds` service logic and exposed it at `POST /api/v1/user/funds`. Ensures atomic updates to the repository.
+*   **`src/app/dashboard/AddFundsModal.tsx` (Frontend):** Created a dynamic slide-up modal with preset and custom deposit options. Uses `api.post("/api/v1/user/funds")` to instantly credit the user account and refreshes the parent dashboard on success.
+
+## Phase 4: Dedicated Portfolio Analytics
+**Goal:** Provide traders with a deep dive into their asset allocation and holding-level performance.
+
+*   **`package.json` (Frontend):** Installed `recharts` for responsive, animated charting.
+*   **`src/app/portfolio/page.tsx` (Frontend):** Created a new, dedicated page component.
+    *   Concurrently fetches live `/v1/api/market/all` prices and the user's exact `/portfolio/holdings` quantities.
+    *   Calculates absolute returns `(Current Value - Invested Amount)` across the entire portfolio.
+    *   Renders a dynamically colored `PieChart` visualizing the user's asset allocation by current value.
+    *   Displays a comprehensive data table listing exact shares owned, average execution prices, live mark-to-market prices, and individual asset return margins. Integrated dynamic "Buy / Sell" buttons on each row.
+*   **`src/components/Navbar.tsx` (Frontend):** Added a top-level navigation link.
+
+## Phase 5: Admin Dashboard & Global Monitoring
+**Goal:** Create a secure, restricted portal for administrators to audit platform-wide order flow.
+
+*   **`src/app/admin/layout.tsx` (Frontend):** Built a strict security layout wrapper. It mounts on every `/admin/*` route and intercepts requests. If the authenticated user's JWT `role` is not explicitly `ADMIN`, it forcefully redirects them to the standard dashboard.
+*   **`src/app/admin/page.tsx` (Frontend):** Built a global trades ledger.
+    *   Communicates securely through the API Gateway to hit the `@PreAuthorize("hasRole('ADMIN')")` protected endpoint: `GET /api/v1/trade/admin/all-trades` on the Transact Service.
+    *   Renders a paginated, system-wide data table showing all trades across all users.
+    *   Consumes the Spring Data JPA `Page<>` response metadata (`page`, `totalPages`, `totalElements`) to render manual "Next" and "Previous" pagination controls.
+*   **`src/components/Navbar.tsx` (Frontend):** Added an "Admin Portal" link that conditionally renders in the top navigation only when the global `authStore` detects `user.role === 'ADMIN'`.

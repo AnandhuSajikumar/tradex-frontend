@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { api } from "@/lib/api";
-import { Megaphone, Receipt, BarChart3, Globe } from "lucide-react";
+import { Megaphone, Receipt, BarChart3, Globe, Plus } from "lucide-react";
 import TradeModal from "./TradeModal";
 import TransactionHistory from "./TransactionHistory";
+import AddFundsModal from "./AddFundsModal";
 
 // Mock helper to generate realistic looking percentage changes based on symbol name
 const getMockChange = (symbol: string, price: number) => {
@@ -35,6 +36,9 @@ export default function DashboardPage() {
     const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
     const [selectedTradeStock, setSelectedTradeStock] = useState<any>(null);
     const [initialTradeAction, setInitialTradeAction] = useState<"Buy" | "Sell">("Buy");
+
+    // Add Funds Modal State
+    const [isAddFundsOpen, setIsAddFundsOpen] = useState(false);
 
     const openTradeModal = (stock: any, action: "Buy" | "Sell") => {
         setSelectedTradeStock(stock);
@@ -255,8 +259,18 @@ export default function DashboardPage() {
                                 <div className="text-3xl font-medium text-gray-900 tracking-tight">{formatCurrency(portfolioData?.currentValue || 0)}</div>
                             </div>
                             <div className="mb-8">
-                                <div className="text-[13px] text-gray-500 mb-1 font-medium">Available Wallet Balance</div>
-                                <div className="text-xl font-medium text-emerald-600 tracking-tight">{formatCurrency(portfolioData?.walletBalance || 0)}</div>
+                                <div className="text-sm font-medium text-gray-500 mb-1">Available Wallet Balance</div>
+                                <div className="flex items-end justify-between">
+                                    <div className="text-[28px] font-semibold text-gray-900 tracking-tight leading-none">
+                                        ₹{portfolioData.walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </div>
+                                    <button
+                                        onClick={() => setIsAddFundsOpen(true)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-sm font-medium rounded-lg transition-colors border border-emerald-200/50"
+                                    >
+                                        <Plus className="w-4 h-4" /> Add Funds
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="space-y-4 pt-4 border-t border-gray-100 text-[14px]">
@@ -315,6 +329,13 @@ export default function DashboardPage() {
                 onClose={() => setIsTradeModalOpen(false)}
                 stock={selectedTradeStock}
                 initialAction={initialTradeAction}
+                onSuccess={() => { (window as any).refreshDashboard?.(); }}
+            />
+
+            <AddFundsModal
+                isOpen={isAddFundsOpen}
+                onClose={() => setIsAddFundsOpen(false)}
+                currentBalance={portfolioData?.walletBalance || 0}
                 onSuccess={() => { (window as any).refreshDashboard?.(); }}
             />
         </div>
